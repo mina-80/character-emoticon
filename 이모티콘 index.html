@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI와 만드는 나만의 캐릭터 &amp; 이모티콘</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Noto Sans KR & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Noto Sans KR', 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#FAF8FF] text-slate-800 pb-16 selection:bg-purple-200">
+
+  <!-- 초기화 확인 커스텀 모달 -->
+  <div id="reset-modal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-xl border-2 border-purple-100 space-y-4">
+      <h3 class="text-xl font-extrabold text-slate-800">처음부터 다시 할까요?</h3>
+      <p class="text-slate-600 text-base">
+        지금까지 만든 캐릭터와 이모티콘 내용이 모두 지워지고 1단계 활동지로 돌아가요.
+      </p>
+      <div class="flex gap-2.5 pt-2">
+        <button
+          type="button"
+          onclick="closeResetModal()"
+          class="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 transition"
+        >
+          계속 작업하기
+        </button>
+        <button
+          type="button"
+          onclick="confirmResetAll()"
+          class="flex-1 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 font-bold text-white transition"
+        >
+          지우고 새로 시작
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상단 고정 헤더 -->
+  <header class="bg-white/95 backdrop-blur-md border-b border-purple-100 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-400 flex items-center justify-center text-white shadow-sm">
+          <!-- 반짝이 아이콘 SVG -->
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+          </svg>
+        </div>
+        <div>
+          <span class="text-xs font-bold text-purple-600 bg-purple-100 px-2.5 py-0.5 rounded-full">
+            초등 5학년 AI 창작 수업
+          </span>
+          <h1 class="text-lg sm:text-xl font-extrabold text-slate-800 tracking-tight mt-0.5">
+            AI와 만드는 나만의 캐릭터 &amp; 이모티콘
+          </h1>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onclick="openResetModal()"
+        class="text-sm font-semibold text-slate-600 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+        </svg>
+        처음부터 다시
+      </button>
+    </div>
+
+    <!-- 4단계 진행 표시 바 -->
+    <div class="bg-purple-50/70 border-t border-purple-100/80">
+      <div class="max-w-5xl mx-auto px-4 py-2.5">
+        <div class="grid grid-cols-4 gap-2">
+          <button type="button" id="tab-step-1" onclick="goToStep(1)" class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold text-center transition truncate bg-purple-600 text-white shadow-sm">
+            ① 캐릭터 생각하기
+          </button>
+          <button type="button" id="tab-step-2" onclick="goToStep(2)" disabled class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold text-center transition truncate bg-white/70 text-slate-400 cursor-not-allowed">
+            ② 캐릭터 확인하기
+          </button>
+          <button type="button" id="tab-step-3" onclick="goToStep(3)" disabled class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold text-center transition truncate bg-white/70 text-slate-400 cursor-not-allowed">
+            ③ 이모티콘 만들기
+          </button>
+          <button type="button" id="tab-step-4" onclick="goToStep(4)" disabled class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold text-center transition truncate bg-white/70 text-slate-400 cursor-not-allowed">
+            ④ 완성!
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 콘텐츠 영역 -->
+  <main class="max-w-4xl mx-auto px-4 pt-6 space-y-6">
+
+    <!-- 알림/오류 배너 -->
+    <div id="alert-banner" class="hidden bg-rose-50 border-2 border-rose-200 rounded-2xl p-4 flex items-start gap-3 text-rose-800">
+      <svg class="w-6 h-6 text-rose-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+      </svg>
+      <div class="flex-1">
+        <p id="alert-text" class="font-bold text-base"></p>
+      </div>
+      <button type="button" onclick="hideAlert()" class="text-rose-400 hover:text-rose-600 p-1" aria-label="닫기">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- =================================================================
+         1단계: 나만의 캐릭터 활동지
+    ================================================================= -->
+    <section id="section-step-1" class="space-y-6">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border-2 border-purple-100">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-800">나만의 캐릭터 활동지</h2>
+            <p class="text-slate-600 text-base mt-1">
+              질문에 답하면서 내가 상상한 캐릭터를 구체적으로 만들어 봐요!
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onclick="fillExample()"
+            class="bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-base px-4 py-2.5 rounded-2xl transition flex items-center gap-2 shadow-sm"
+          >
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+            예시 채우기
+          </button>
+        </div>
+
+        <!-- 6개 질문 입력 폼 -->
+        <div class="space-y-5">
+          <div class="space-y-1.5">
+            <label for="input-name" class="flex items-center gap-2 text-base font-bold text-slate-700">
+              <span class="w-7 h-7 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-extrabold shrink-0">1</span>
+              내 캐릭터 이름은? (내 이름이 아니라 캐릭터 이름이에요!)
+            </label>
+            <input
+              id="input-name"
+              type="text"
+              oninput="updateCharPrompt()"
+              placeholder="예: 보송이, 초코, 말랑이"
+              class="w-full min-h-[48px] px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-100 outline-none text-base bg-slate-50/50 focus:bg-white transition"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="input-appearance" class="flex items-center gap-2 text-base font-bold text-slate-700">
+              <span class="w-7 h-7 rounded-full bg-pink-100 text-pink-700 flex items-center justify-center text-sm font-extrabold shrink-0">2</span>
+              내 캐릭터는 어떤 모습인가요?
+            </label>
+            <input
+              id="input-appearance"
+              type="text"
+              oninput="updateCharPrompt()"
+              placeholder="예: 귀가 긴 토끼, 동그란 얼굴, 작은 몸"
+              class="w-full min-h-[48px] px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-100 outline-none text-base bg-slate-50/50 focus:bg-white transition"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="input-personality" class="flex items-center gap-2 text-base font-bold text-slate-700">
+              <span class="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-extrabold shrink-0">3</span>
+              내 캐릭터의 성격은?
+            </label>
+            <input
+              id="input-personality"
+              type="text"
+              oninput="updateCharPrompt()"
+              placeholder="예: 장난꾸러기지만 친구를 잘 도와줘요"
+              class="w-full min-h-[48px] px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-100 outline-none text-base bg-slate-50/50 focus:bg-white transition"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="input-color" class="flex items-center gap-2 text-base font-bold text-slate-700">
+              <span class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-extrabold shrink-0">4</span>
+              대표 색깔은?
+            </label>
+            <input
+              id="input-color"
+              type="text"
+              oninput="updateCharPrompt()"
+              placeholder="예: 연보라색, 민트색, 노란색"
+              class="w-full min-h-[48px] px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-100 outline-none text-base bg-slate-50/50 focus:bg-white transition"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="input-outfit" class="flex items-center gap-2 text-base font-bold text-slate-700">
+              <span class="w-7 h-7 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-sm font-extrabold shrink-0">5</span>
+              어떤 옷이나 소품을 가지고 있나요?
+            </label>
+            <input
+              id="input-outfit"
+              type="text"
+              oninput="updateCharPrompt()"
+              placeholder="예: 노란 멜빵바지, 작은 별 가방"
+              class="w-full min-h-[48px] px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-100 outline-none text-base bg-slate-50/50 focus:bg-white transition"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="input-style" class="flex items-center gap-2 text-base font-bold text-slate-700">
+              <span class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-extrabold shrink-0">6</span>
+              어떤 그림 스타일로 만들고 싶나요?
+            </label>
+            <input
+              id="input-style"
+              type="text"
+              oninput="updateCharPrompt()"
+              placeholder="예: 귀여운 2D 스티커, 둥글둥글한 만화 캐릭터"
+              class="w-full min-h-[48px] px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-100 outline-none text-base bg-slate-50/50 focus:bg-white transition"
+            />
+          </div>
+        </div>
+
+        <!-- 자동 프롬프트 미리보기 카드 -->
+        <div class="mt-8 bg-gradient-to-br from-purple-50 to-indigo-50/70 rounded-2xl p-5 border-2 border-purple-200/80">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+            <span class="font-extrabold text-purple-900 text-base flex items-center gap-2">
+              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59" />
+              </svg>
+              AI에게 이렇게 부탁할 거예요 (자동 완성 프롬프트)
+            </span>
+            <button
+              type="button"
+              id="btn-copy-char-small"
+              onclick="copyCharPrompt('btn-copy-char-small', '복사 완료!')"
+              class="text-sm font-bold bg-white hover:bg-purple-100 text-purple-700 px-3.5 py-1.5 rounded-xl border border-purple-200 transition flex items-center gap-1.5"
+            >
+              프롬프트 복사
+            </button>
+          </div>
+          <p id="char-prompt-preview" class="text-slate-700 text-base leading-relaxed whitespace-pre-line bg-white/85 p-4 rounded-xl border border-purple-100"></p>
+        </div>
+
+        <!-- 주요 액션 버튼 -->
+        <div class="mt-6 flex flex-col sm:flex-row gap-3">
+          <button
+            type="button"
+            id="btn-copy-char-main"
+            onclick="copyCharPrompt('btn-copy-char-main', '복사 완료! 제미나이에 붙여넣으세요')"
+            class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-lg py-4 px-6 rounded-2xl shadow-md transition flex items-center justify-center gap-2.5"
+          >
+            1. 프롬프트 복사하기
+          </button>
+
+          <button
+            type="button"
+            onclick="triggerImageUpload()"
+            class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-lg py-4 px-6 rounded-2xl shadow-md transition flex items-center justify-center gap-2.5"
+          >
+            2. 제미나이에서 만든 이미지 올리기
+          </button>
+        </div>
+      </div>
+
+      <!-- 제미나이 연동 사용 순서 안내 카드 -->
+      <div class="bg-amber-50/90 border-2 border-amber-200 rounded-2xl p-5">
+        <h3 class="font-extrabold text-amber-950 text-base mb-1">
+          제미나이(Gemini)와 함께 만드는 방법
+        </h3>
+        <p class="text-sm text-amber-900 leading-relaxed">
+          ① <strong>[1. 프롬프트 복사하기]</strong>를 눌러 제미나이 채팅창에 붙여넣고 캐릭터를 만들어요.<br />
+          ② 마음에 드는 그림을 저장한 뒤 <strong>[2. 제미나이에서 만든 이미지 올리기]</strong>를 누르면 다음 단계로 넘어가요!
+        </p>
+      </div>
+    </section>
+
+    <!-- 숨겨진 파일 입력 (공용) -->
+    <input
+      id="char-file-input"
+      type="file"
+      accept="image/png, image/jpeg, image/webp"
+      onchange="handleImageUpload(event)"
+      class="hidden"
+    />
+
+    <!-- =================================================================
+         2단계: 캐릭터 확인 및 수정 프롬프트 만들기
+    ================================================================= -->
+    <section id="section-step-2" class="hidden bg-white rounded-3xl p-6 sm:p-8 shadow-sm border-2 border-purple-100 space-y-6">
+      <div class="flex items-center justify-between">
+        <button
+          type="button"
+          onclick="goToStep(1)"
+          class="text-slate-600 hover:text-purple-700 font-bold text-base flex items-center gap-1.5"
+        >
+          ← 활동지 고치러 가기
+        </button>
+        <span class="text-sm font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
+          제미나이 생성 이미지 불러오기 완료
+        </span>
+      </div>
+
+      <div class="text-center">
+        <h2 id="step2-title" class="text-2xl font-extrabold text-slate-800">
+          ‘나만의 캐릭터’가 준비되었어요!
+        </h2>
+        <p class="text-slate-600 text-base mt-1">
+          이 캐릭터를 기준으로 8개의 이모티콘을 만들 거예요. 마음에 드나요?
+        </p>
+      </div>
+
+      <!-- 캐릭터 이미지 큰 미리보기 카드 -->
+      <div class="max-w-sm mx-auto bg-gradient-to-b from-purple-50/70 to-pink-50/50 rounded-3xl p-6 border-2 border-purple-200 flex flex-col items-center justify-center min-h-[320px]">
+        <img
+          id="step2-char-img"
+          src=""
+          alt="내가 만든 캐릭터"
+          class="w-64 h-64 object-contain rounded-2xl bg-white p-2 shadow-sm"
+        />
+        <span id="step2-char-name" class="mt-3 font-extrabold text-lg text-slate-800 bg-white px-4 py-1 rounded-full shadow-sm border border-purple-100">
+          캐릭터 이름
+        </span>
+      </div>
+
+      <!-- 액션 버튼들 -->
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button
+            type="button"
+            onclick="triggerImageUpload()"
+            class="py-3.5 px-4 rounded-2xl border-2 border-slate-200 hover:border-purple-300 hover:bg-purple-50 font-bold text-base text-slate-700 flex items-center justify-center gap-2 transition"
+          >
+            다른 이미지 올리기
+          </button>
+
+          <button
+            type="button"
+            onclick="toggleEditBox()"
+            class="py-3.5 px-4 rounded-2xl border-2 border-amber-300 bg-amber-50 hover:bg-amber-100 font-bold text-base text-amber-900 flex items-center justify-center gap-2 transition"
+          >
+            수정 프롬프트 만들기
+          </button>
+
+          <button
+            type="button"
+            onclick="goToStep(3)"
+            class="py-3.5 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-base shadow-md flex items-center justify-center gap-2 transition"
+          >
+            이 캐릭터로 진행! →
+          </button>
+        </div>
+
+        <!-- 조금 고쳐 보기 입력창 -->
+        <div id="edit-box" class="hidden bg-amber-50/80 border-2 border-amber-200 rounded-2xl p-5 space-y-3">
+          <label for="input-edit-instruction" class="block font-extrabold text-amber-950 text-base">
+            어떤 부분을 바꾸고 싶나요?
+          </label>
+          <input
+            id="input-edit-instruction"
+            type="text"
+            placeholder="예: 귀를 조금 더 크게 해줘 / 옷을 분홍색으로 바꿔줘 / 더 웃는 표정으로 해줘"
+            class="w-full min-h-[48px] px-4 py-3 rounded-xl border-2 border-amber-300 bg-white focus:outline-none focus:border-amber-500 text-base"
+          />
+          <div class="flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              id="btn-copy-edit"
+              onclick="copyEditPrompt()"
+              class="bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-base px-5 py-3 rounded-xl shadow-sm transition"
+            >
+              수정 프롬프트 복사하기
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         3단계: 이모티콘 문구 8개 정하기 & 주문서 복사
+    ================================================================= -->
+    <section id="section-step-3" class="hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border-2 border-purple-100">
+        <!-- 상단 기준 캐릭터 요약 바 -->
+        <div class="flex flex-wrap items-center justify-between gap-4 bg-purple-50/80 p-4 rounded-2xl border border-purple-100 mb-6">
+          <div class="flex items-center gap-3.5">
+            <img
+              id="step3-char-thumb"
+              src=""
+              alt="기준 캐릭터"
+              class="w-16 h-16 rounded-2xl bg-white object-contain p-1 border border-purple-200"
+            />
+            <div>
+              <span class="text-xs font-bold text-purple-600">기준 캐릭터</span>
+              <h3 id="step3-char-name" class="text-lg font-extrabold text-slate-800">캐릭터</h3>
+              <p id="step3-char-desc" class="text-xs text-slate-600 line-clamp-1"></p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="goToStep(2)"
+            class="text-sm font-bold text-purple-700 bg-white hover:bg-purple-100 px-3.5 py-2 rounded-xl border border-purple-200"
+          >
+            캐릭터 다시 고르기
+          </button>
+        </div>
+
+        <div class="mb-5">
+          <h2 class="text-2xl font-extrabold text-slate-800">이모티콘 문구 8개 정하기</h2>
+          <p class="text-slate-600 text-base mt-1">
+            <strong id="step3-inline-name" class="text-purple-700">내 캐릭터</strong>가 어떤 말을 하면 좋을까요? 문구를 자유롭게 바꿀 수 있어요!
+          </p>
+        </div>
+
+        <!-- 2열 × 4행 입력 그리드 (JS로 자동 생성) -->
+        <div id="emoticon-inputs-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+
+        <p class="mt-4 text-sm font-semibold text-purple-700 bg-purple-50 px-4 py-2.5 rounded-xl">
+          ✨ 말에 어울리는 표정과 행동은 AI가 생각해서 만들어 줘요!
+        </p>
+
+        <!-- 복사 메인 버튼 -->
+        <div class="mt-5">
+          <button
+            type="button"
+            id="btn-copy-emo-main"
+            onclick="copyEmoticonPrompt('btn-copy-emo-main', '8개 이모티콘 프롬프트 복사 완료! (제미나이에 붙여넣으세요)')"
+            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-lg px-6 py-4 rounded-2xl shadow-md transition flex items-center justify-center gap-2"
+          >
+            이모티콘 8개 프롬프트 만들고 복사하기
+          </button>
+        </div>
+
+        <!-- 이모티콘 프롬프트 미리보기 박스 -->
+        <div class="mt-5 bg-indigo-50/70 border-2 border-indigo-200 rounded-2xl p-4 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="font-extrabold text-indigo-950 text-sm">
+              제미나이에 캐릭터 이미지와 함께 붙여넣을 이모티콘 주문서
+            </span>
+            <button
+              type="button"
+              id="btn-copy-emo-small"
+              onclick="copyEmoticonPrompt('btn-copy-emo-small', '복사됨!')"
+              class="text-xs font-bold bg-white hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 text-indigo-700"
+            >
+              프롬프트 복사
+            </button>
+          </div>
+          <pre id="emo-prompt-preview" class="text-xs sm:text-sm text-slate-700 whitespace-pre-wrap font-sans bg-white/90 p-3.5 rounded-xl border border-indigo-100 leading-relaxed"></pre>
+          <p class="text-xs font-bold text-indigo-800">
+            💡 팁: 제미나이 채팅창에 방금 만든 캐릭터 이미지를 올린 뒤 위 프롬프트를 붙여넣으면 똑같은 캐릭터로 8가지 표정을 그려줘요!
+          </p>
+        </div>
+      </div>
+
+      <!-- 초등 5학년용 간단 마무리 안내 카드 -->
+      <div class="bg-emerald-50/90 border-2 border-emerald-200 rounded-3xl p-6 space-y-3">
+        <h3 class="text-lg font-extrabold text-emerald-950">
+          이제 제미나이에서 이모티콘을 만들어 볼까요?
+        </h3>
+        <ol class="list-decimal list-inside space-y-1.5 text-sm sm:text-base text-emerald-900 font-medium leading-relaxed">
+          <li>위 보라색 버튼 <strong>[이모티콘 8개 프롬프트 만들고 복사하기]</strong>를 눌러요.</li>
+          <li>제미나이 채팅창에 내 캐릭터 그림과 복사한 글을 함께 넣고 전송해요.</li>
+          <li>AI가 그려준 8가지 표정의 이모티콘을 확인하고 저장해요!</li>
+        </ol>
+        <div class="pt-2">
+          <button
+            type="button"
+            onclick="goToStep(4)"
+            class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-base px-6 py-3.5 rounded-2xl shadow-sm transition"
+          >
+            활동 마무리하기 →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         4단계: 최종 완성 화면
+    ================================================================= -->
+    <section id="section-step-4" class="hidden bg-white rounded-3xl p-6 sm:p-8 shadow-sm border-2 border-emerald-200 space-y-6">
+      <div class="text-center space-y-2">
+        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl font-extrabold">
+          ✓
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800">
+          나만의 캐릭터 &amp; 이모티콘 활동 완료!
+        </h2>
+        <p class="text-slate-600 text-base">
+          내가 상상한 <strong id="step4-char-name-inline" class="text-purple-700">‘나만의 캐릭터’</strong> 프롬프트를 멋지게 완성했어요!
+        </p>
+      </div>
+
+      <!-- 내가 만든 기준 캐릭터 보여주기 -->
+      <div class="max-w-xs mx-auto bg-purple-50/70 rounded-3xl p-5 border-2 border-purple-200 flex flex-col items-center">
+        <img
+          id="step4-char-img"
+          src=""
+          alt="완성된 캐릭터"
+          class="w-48 h-48 object-contain rounded-2xl bg-white p-2 shadow-sm"
+        />
+        <span id="step4-char-name" class="mt-3 font-extrabold text-lg text-slate-800">
+          캐릭터
+        </span>
+      </div>
+
+      <!-- 소감 나누기 질문 -->
+      <div class="bg-pink-50/70 border-2 border-pink-200 rounded-2xl p-5 space-y-2.5">
+        <label for="input-reflection" class="block font-extrabold text-pink-950 text-base">
+          ♥ 오늘 AI와 함께 캐릭터를 만들면서 느낀 점이나 가장 마음에 드는 점은 무엇인가요? (선택)
+        </label>
+        <input
+          id="input-reflection"
+          type="text"
+          placeholder="예: 내가 생각한 대로 그림이 나와서 신기했어요!"
+          class="w-full min-h-[46px] px-4 py-2.5 rounded-xl border border-pink-300 bg-white text-base focus:outline-none focus:border-pink-500"
+        />
+        <p class="text-xs text-pink-800">
+          * 작성한 내용은 서버에 저장되지 않아요. 화면을 캡처해서 학급 게시판에 올려 보세요!
+        </p>
+      </div>
+
+      <!-- 하단 최종 버튼 -->
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button
+          type="button"
+          onclick="goToStep(3)"
+          class="flex-1 bg-purple-100 hover:bg-purple-200 text-purple-900 font-extrabold text-base py-4 px-6 rounded-2xl transition"
+        >
+          ← 이모티콘 프롬프트 다시 보기
+        </button>
+
+        <button
+          type="button"
+          onclick="openResetModal()"
+          class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-base py-4 px-6 rounded-2xl transition"
+        >
+          처음부터 새 캐릭터 만들기
+        </button>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         하단 고정: AI 사용 약속 및 개인정보 보호 안내 카드
+    ================================================================= -->
+    <footer class="bg-white/90 border-2 border-slate-200/80 rounded-2xl p-5 shadow-sm">
+      <div class="flex items-center gap-2 text-slate-800 font-extrabold text-base mb-2.5">
+        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+        </svg>
+        우리 반 AI 사용 약속
+      </div>
+      <ul class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-sm text-slate-600 font-medium">
+        <li>• 나와 친구의 이름, 전화번호, 주소, 학교 이름 같은 개인정보는 입력하지 않아요.</li>
+        <li>• 다른 사람의 사진이나 얼굴을 허락 없이 사용하지 않아요.</li>
+        <li>• 다른 사람의 캐릭터나 저작물을 그대로 따라 만들지 않아요.</li>
+        <li>• AI가 만든 결과는 내가 직접 확인하고 바르게 사용해요.</li>
+      </ul>
+    </footer>
+  </main>
+
+  <script>
+    // =========================================================================
+    // 상태 변수 및 초기 데이터
+    // =========================================================================
+    let currentStep = 1;
+    let uploadedImageDataUrl = null;
+
+    const initialEmoticons = [
+      { id: 1, phrase: '안녕!', actionDesc: '밝게 웃으며 한 손을 흔드는 모습' },
+      { id: 2, phrase: '고마워!', actionDesc: '두 손을 모으고 감사하게 웃는 모습' },
+      { id: 3, phrase: '좋아!', actionDesc: '엄지를 올리며 활짝 웃는 모습' },
+      { id: 4, phrase: '미안해', actionDesc: '고개를 조금 숙이고 미안한 표정을 짓는 모습' },
+      { id: 5, phrase: '헉!', actionDesc: '눈을 크게 뜨고 두 손을 입 가까이에 댄 놀란 모습' },
+      { id: 6, phrase: '화났어!', actionDesc: '볼을 부풀리고 팔짱을 낀 화난 모습' },
+      { id: 7, phrase: '힘내!', actionDesc: '주먹을 힘차게 들고 응원하는 모습' },
+      { id: 8, phrase: '잘 자!', actionDesc: '눈을 감고 작은 베개를 안고 편안하게 자는 모습' }
+    ];
+
+    let emoticons = JSON.parse(JSON.stringify(initialEmoticons));
+
+    // =========================================================================
+    // 문구에 어울리는 표정/행동 자동 추론 함수
+    // =========================================================================
+    function getActionFromPhrase(phrase) {
+      const p = phrase.trim();
+      if (p.includes('안녕') || p.includes('하이') || p.includes('반가')) return '밝게 웃으며 한 손을 반갑게 흔드는 모습';
+      if (p.includes('고마') || p.includes('감사')) return '두 손을 모으고 따뜻하고 감사하게 웃는 모습';
+      if (p.includes('좋아') || p.includes('최고') || p.includes('굿')) return '엄지손가락을 척 올리며 활짝 웃는 모습';
+      if (p.includes('미안') || p.includes('죄송')) return '고개를 살짝 숙이고 눈썹을 내린 미안한 표정';
+      if (p.includes('헉') || p.includes('깜짝') || p.includes('놀라') || p.includes('대박')) return '눈을 동그랗게 크게 뜨고 깜짝 놀란 모습';
+      if (p.includes('화나') || p.includes('화났') || p.includes('흥') || p.includes('삐짐')) return '볼을 빵빵하게 부풀리고 팔짱을 낀 귀여운 화난 모습';
+      if (p.includes('힘내') || p.includes('화이팅') || p.includes('파이팅') || p.includes('응원')) return '주먹을 불끈 쥐고 힘차게 응원하는 모습';
+      if (p.includes('잘 자') || p.includes('졸려') || p.includes('굿밤')) return '눈을 감고 작은 베개를 안고 편안하게 잠자는 모습';
+      if (p.includes('슬퍼') || p.includes('흑흑') || p.includes('눈물')) return '눈물을 글썽이며 시무룩해하는 모습';
+      if (p.includes('사랑') || p.includes('하트')) return '머리 위로 큰 하트를 그리며 사랑스럽게 웃는 모습';
+      if (p.includes('축하') || p.includes('생일')) return '박수를 치며 기쁘게 축하해 주는 모습';
+      return `‘${p || '이모티콘'}’라는 말에 가장 잘 어울리는 생동감 있는 표정과 몸짓`;
+    }
+
+    // =========================================================================
+    // 입력값 읽기 및 프롬프트 텍스트 생성
+    // =========================================================================
+    function getCharValues() {
+      return {
+        name: document.getElementById('input-name').value.trim(),
+        appearance: document.getElementById('input-appearance').value.trim(),
+        personality: document.getElementById('input-personality').value.trim(),
+        color: document.getElementById('input-color').value.trim(),
+        outfit: document.getElementById('input-outfit').value.trim(),
+        style: document.getElementById('input-style').value.trim()
+      };
+    }
+
+    function buildCharPrompt() {
+      const c = getCharValues();
+      return `이름이 ‘${c.name || '(캐릭터 이름)'}’인 캐릭터를 만들어 주세요.
+모습은 ${c.appearance || '(생김새)'}입니다.
+성격은 ${c.personality || '(성격)'}입니다.
+대표 색깔은 ${c.color || '(대표 색깔)'}입니다.
+${c.outfit || '(옷이나 소품)'}을(를) 착용하고 있습니다.
+${c.style || '귀여운 2D 스티커 스타일'}로 만들어 주세요.
+전신이 잘 보이도록 하고, 표정은 친근하고 밝게 만들어 주세요.
+배경은 흰색 또는 투명한 배경에 가깝게, 스티커나 이모티콘으로 활용하기 쉬운 형태로 만들어 주세요. (이미지에 글자는 넣지 마세요)`;
+    }
+
+    function buildEmoticonPrompt() {
+      const c = getCharValues();
+      const lines = emoticons
+        .map((item, idx) => `${idx + 1}. ${item.phrase} — ${item.actionDesc}`)
+        .join('\n');
+
+      return `위에서 만든 ‘${c.name || '내 캐릭터'}’의 디자인을 그대로 유지해 주세요. 얼굴형, 눈 모양, 귀/머리 모양, 대표 색깔(${c.color || '원래 색'}), 옷과 소품(${c.outfit || '원래 옷'})을 절대 다른 디자인으로 바꾸지 마세요.
+아래 8개 문구에 어울리는 표정과 행동을 각각 만들어 주세요. 모든 그림은 동일한 캐릭터여야 합니다.
+
+${lines}
+
+각 이미지는 ${c.style || '귀여운 2D 스티커 스타일'}, 정면 또는 3/4 방향, 단순한 흰색/투명 배경, 스티커처럼 잘라 쓰기 쉬운 형태로 만들어 주세요. 이미지 안에 글자는 넣지 마세요.`;
+    }
+
+    function updateCharPrompt() {
+      document.getElementById('char-prompt-preview').textContent = buildCharPrompt();
+    }
+
+    function updateEmoticonPrompt() {
+      document.getElementById('emo-prompt-preview').textContent = buildEmoticonPrompt();
+    }
+
+    // =========================================================================
+    // 예시 채우기 및 클립보드 복사 (iFrame 호환 execCommand 방식 포함)
+    // =========================================================================
+    function fillExample() {
+      document.getElementById('input-name').value = '보송이';
+      document.getElementById('input-appearance').value = '귀가 길고 얼굴이 동그란 작은 토끼';
+      document.getElementById('input-personality').value = '장난꾸러기지만 친구를 잘 도와주는 따뜻한 성격';
+      document.getElementById('input-color').value = '연보라색과 크림색';
+      document.getElementById('input-outfit').value = '노란 멜빵바지와 별 모양 가방';
+      document.getElementById('input-style').value = '둥글둥글하고 귀여운 2D 스티커 스타일';
+      hideAlert();
+      updateCharPrompt();
+    }
+
+    function copyTextToClipboard(text, btnId, successLabel) {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        if (successful) {
+          const btn = document.getElementById(btnId);
+          if (btn) {
+            const originalText = btn.textContent;
+            btn.textContent = '✓ ' + successLabel;
+            setTimeout(() => {
+              btn.textContent = originalText;
+            }, 2500);
+          }
+        } else {
+          showAlert('프롬프트 복사에 실패했어요. 상자 안의 글자를 직접 드래그해서 복사해 주세요!');
+        }
+      } catch (err) {
+        showAlert('프롬프트 복사에 실패했어요. 상자 안의 글자를 직접 드래그해서 복사해 주세요!');
+      }
+    }
+
+    function copyCharPrompt(btnId, successLabel) {
+      copyTextToClipboard(buildCharPrompt(), btnId, successLabel);
+    }
+
+    function copyEditPrompt() {
+      const editText = document.getElementById('input-edit-instruction').value.trim();
+      const fullPrompt = `${buildCharPrompt()}\n\n[수정 요청]: 기존 캐릭터의 핵심 특징은 유지하면서 다음 부분만 수정해 주세요: ${editText || '표정을 더 밝게 해줘'}`;
+      copyTextToClipboard(fullPrompt, 'btn-copy-edit', '수정 프롬프트 복사 완료!');
+    }
+
+    function copyEmoticonPrompt(btnId, successLabel) {
+      copyTextToClipboard(buildEmoticonPrompt(), btnId, successLabel);
+    }
+
+    // =========================================================================
+    // 이미지 업로드 및 단계 전환
+    // =========================================================================
+    function triggerImageUpload() {
+      document.getElementById('char-file-input').click();
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function () {
+        if (typeof reader.result === 'string') {
+          uploadedImageDataUrl = reader.result;
+          hideAlert();
+          syncCharacterDisplays();
+          goToStep(2);
+        }
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    function syncCharacterDisplays() {
+      const c = getCharValues();
+      const displayName = c.name || '나만의 캐릭터';
+
+      // 2단계 화면 반영
+      document.getElementById('step2-title').textContent = `‘${displayName}’가 준비되었어요!`;
+      document.getElementById('step2-char-name').textContent = displayName;
+      if (uploadedImageDataUrl) {
+        document.getElementById('step2-char-img').src = uploadedImageDataUrl;
+        document.getElementById('step3-char-thumb').src = uploadedImageDataUrl;
+        document.getElementById('step4-char-img').src = uploadedImageDataUrl;
+      }
+
+      // 3단계 화면 반영
+      document.getElementById('step3-char-name').textContent = displayName;
+      document.getElementById('step3-char-desc').textContent = c.appearance || '내가 상상한 캐릭터';
+      document.getElementById('step3-inline-name').textContent = displayName;
+
+      // 4단계 화면 반영
+      document.getElementById('step4-char-name-inline').textContent = `‘${displayName}’`;
+      document.getElementById('step4-char-name').textContent = displayName;
+    }
+
+    function goToStep(stepNum) {
+      if (stepNum >= 2 && !uploadedImageDataUrl) {
+        showAlert('먼저 1단계에서 제미나이가 만든 캐릭터 이미지를 올려 주세요!');
+        return;
+      }
+
+      currentStep = stepNum;
+      syncCharacterDisplays();
+
+      // 모든 섹션 숨기고 현재 단계만 표시
+      [1, 2, 3, 4].forEach((n) => {
+        const sec = document.getElementById(`section-step-${n}`);
+        if (n === stepNum) {
+          sec.classList.remove('hidden');
+        } else {
+          sec.classList.add('hidden');
+        }
+
+        // 상단 탭 스타일 업데이트
+        const tab = document.getElementById(`tab-step-${n}`);
+        const isUnlocked = n === 1 || Boolean(uploadedImageDataUrl);
+        tab.disabled = !isUnlocked;
+
+        tab.className = 'py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold text-center transition truncate ';
+        if (n === stepNum) {
+          tab.className += 'bg-purple-600 text-white shadow-sm';
+        } else if (isUnlocked) {
+          tab.className += 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 cursor-pointer';
+        } else {
+          tab.className += 'bg-white/70 text-slate-400 cursor-not-allowed';
+        }
+      });
+
+      if (stepNum === 3) {
+        renderEmoticonInputs();
+        updateEmoticonPrompt();
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleEditBox() {
+      const box = document.getElementById('edit-box');
+      box.classList.toggle('hidden');
+    }
+
+    // =========================================================================
+    // 3단계: 이모티콘 8종 입력칸 렌더링 및 실시간 업데이트
+    // =========================================================================
+    function renderEmoticonInputs() {
+      const container = document.getElementById('emoticon-inputs-grid');
+      container.innerHTML = '';
+
+      emoticons.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-50/80 border-2 border-slate-200/90 focus-within:border-purple-400 focus-within:bg-white rounded-2xl p-3.5 transition';
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm font-extrabold text-purple-700">${idx + 1}번 이모티콘</span>
+            <span id="emo-action-${item.id}" class="text-xs text-slate-500 truncate max-w-[65%]">
+              행동: ${item.actionDesc}
+            </span>
+          </div>
+          <input
+            type="text"
+            value="${item.phrase.replace(/"/g, '&quot;')}"
+            maxlength="15"
+            oninput="handleEmoticonPhraseChange(${item.id}, this.value)"
+            class="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-300 bg-white font-bold text-base text-slate-800 focus:outline-none"
+          />
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function handleEmoticonPhraseChange(id, newPhrase) {
+      const target = emoticons.find((e) => e.id === id);
+      if (!target) return;
+
+      target.phrase = newPhrase;
+      target.actionDesc = getActionFromPhrase(newPhrase);
+
+      const actionLabel = document.getElementById(`emo-action-${id}`);
+      if (actionLabel) {
+        actionLabel.textContent = `행동: ${target.actionDesc}`;
+      }
+      updateEmoticonPrompt();
+    }
+
+    // =========================================================================
+    // 알림 배너 및 초기화 모달 제어
+    // =========================================================================
+    function showAlert(msg) {
+      document.getElementById('alert-text').textContent = msg;
+      document.getElementById('alert-banner').classList.remove('hidden');
+    }
+
+    function hideAlert() {
+      document.getElementById('alert-banner').classList.add('hidden');
+    }
+
+    function openResetModal() {
+      document.getElementById('reset-modal').classList.remove('hidden');
+    }
+
+    function closeResetModal() {
+      document.getElementById('reset-modal').classList.add('hidden');
+    }
+
+    function confirmResetAll() {
+      ['input-name', 'input-appearance', 'input-personality', 'input-color', 'input-outfit', 'input-style', 'input-edit-instruction', 'input-reflection'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      uploadedImageDataUrl = null;
+      emoticons = JSON.parse(JSON.stringify(initialEmoticons));
+      document.getElementById('edit-box').classList.add('hidden');
+      hideAlert();
+      closeResetModal();
+      updateCharPrompt();
+      goToStep(1);
+    }
+
+    // 초기 로드 시 프롬프트 미리보기 세팅
+    window.onload = function () {
+      updateCharPrompt();
+    };
+  </script>
+</body>
+</html>
